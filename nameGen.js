@@ -24,36 +24,63 @@ let thinData = (inputString) =>{
 let trainModel = (data)=>{
     data.forEach(word=>{
         let syllables=breakSyllables(word);
-        for(let i=0;i<=syllables.length; i++){
-            if (i+1<syllables.length){
-                if(!weightedSyllableDictionary[syllables[i]]){
-                    weightedSyllableDictionary[syllables[i]]={};
-                    // weightedSyllableDictionary[syllables[i]].count=1;
-                    weightedSyllableDictionary[syllables[i]][syllables[i+1]]=50;
-                }else if(weightedSyllableDictionary[syllables[i]][syllables[i+1]]){
-                    // weightedSyllableDictionary[syllables[i]].count+=1;
-                    weightedSyllableDictionary[syllables[i]][syllables[i+1]]+=50;
-                }else{
-                    // weightedSyllableDictionary[syllables[i]].count+=1;
-                    weightedSyllableDictionary[syllables[i]][syllables[i+1]]=50;
+        if(syllables.length==1){
+            if(!weightedSyllableDictionary.start.includes(syllables[0])){
+                weightedSyllableDictionary.start.push(syllables[0]);
+            }
+        }
+        if(syllables.length<=2){
+            if(!weightedSyllableDictionary.start.includes(syllables[0])){
+                weightedSyllableDictionary.start.push(syllables[0]);
+            }
+            if(!weightedSyllableDictionary.end.includes(syllables[syllables.length-1])){
+                weightedSyllableDictionary.end.push(syllables[syllables.length-1]);
+            }
+        }
+        if(syllables.length<=3){
+            for(let i=1; i<syllables.length-1; i++){
+                if(!weightedSyllableDictionary.middle.includes(syllables[i])){
+                    weightedSyllableDictionary.middle.push(syllables[i]);
                 }
             }
         }
     });
-
-    let keyArray = Object.keys(weightedSyllableDictionary);
-
-    keyArray.map(key=>{
-        let target = weightedSyllableDictionary[key]
-        keyArray.map(subKey=>{
-            if(!target[subKey]&& subKey!=key){
-                target[subKey]=1;
-            }
-        })
-    })
-
     
 }
+
+// let trainModel = (data)=>{
+//     data.forEach(word=>{
+//         let syllables=breakSyllables(word);
+//         for(let i=0;i<=syllables.length; i++){
+//             if (i+1<syllables.length){
+//                 if(!weightedSyllableDictionary[syllables[i]]){
+//                     weightedSyllableDictionary[syllables[i]]={};
+//                     // weightedSyllableDictionary[syllables[i]].count=1;
+//                     weightedSyllableDictionary[syllables[i]][syllables[i+1]]=50;
+//                 }else if(weightedSyllableDictionary[syllables[i]][syllables[i+1]]){
+//                     // weightedSyllableDictionary[syllables[i]].count+=1;
+//                     weightedSyllableDictionary[syllables[i]][syllables[i+1]]+=50;
+//                 }else{
+//                     // weightedSyllableDictionary[syllables[i]].count+=1;
+//                     weightedSyllableDictionary[syllables[i]][syllables[i+1]]=50;
+//                 }
+//             }
+//         }
+//     });
+
+//     let keyArray = Object.keys(weightedSyllableDictionary);
+
+//     keyArray.map(key=>{
+//         let target = weightedSyllableDictionary[key]
+//         keyArray.map(subKey=>{
+//             if(!target[subKey]&& subKey!=key){
+//                 target[subKey]=1;
+//             }
+//         })
+//     })
+
+    
+// }
 
 let consonants=[
     "b",
@@ -138,24 +165,33 @@ let breakSyllables=(input)=>{
     return syllables;
 }
 let makeWord = (numberOfSyllables)=>{
-    let testPool = Object.keys(weightedSyllableDictionary);
-    let output = [choose(testPool)];
-    for(let i=1;i < numberOfSyllables;i++){
-        let syllablePossibilities = weightedSyllableDictionary[output[i-1]];
-        let syllablePool=[];
-        let possibilityKeys=Object.keys(syllablePossibilities);
-        for(let j = 0; j<possibilityKeys.length;j++){
-            for(let weight = 0; weight<syllablePossibilities[possibilityKeys[j]];weight++){
-                syllablePool.push(possibilityKeys[j]);
-            }
+    let prefix = choose(weightedSyllableDictionary.start);
+    let output = prefix;
+    if(numberOfSyllables>=3){
+        let middle = [];
+        for(let i = numberOfSyllables-2;i>0;i--){
+            middle.push(choose(weightedSyllableDictionary.middle));
         }
-        output.push(choose(syllablePool));
+        output = output+middle.join('');
     }
-    return output.join('');
+    if(numberOfSyllables>=2){
+        let suffix = choose(weightedSyllableDictionary.end);
+        output = output+suffix;
+    }
+    
+    return output;
+}
+let nameBlock=(it)=>{
+    let output=[];
+    for(let o=it; o>0;o--){
+        output.push(makeWord(process.env.NAME_SECTIONS));
+    }
+    return output;
 }
 
 trainModel(thinData(rawText));
 
 
-console.log(makeWord(2));
+
+console.log(nameBlock(process.env.NAME_QTY));
 // console.log(containsVowels('test'));
